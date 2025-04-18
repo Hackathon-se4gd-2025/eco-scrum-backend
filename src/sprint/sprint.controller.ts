@@ -42,7 +42,7 @@ export class SprintController {
   remove(@Param('id') id: string) {
     return this.sprintService.remove(id);
   }
-  
+
   @Patch(':id/retrospective')
 @ApiOperation({ summary: 'Update retrospective field for a sprint' })
 @ApiResponse({ status: 200, description: 'Retrospective updated', type: Sprint })
@@ -52,4 +52,5 @@ updateRetrospective(
 ) {
   return this.sprintService.updateRetrospective(id, updateData.retrospective);
 }
+
 }

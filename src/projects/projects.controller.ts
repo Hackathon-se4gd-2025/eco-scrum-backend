@@ -3,6 +3,7 @@ import { ProjectService } from './projects.service';
 
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Project } from './projects.schema';
+import { Sprint } from 'src/sprint/sprint.schema';
 
 @ApiTags('projects')
 @Controller('projects')
@@ -59,5 +60,11 @@ async addTeamMember(
 @ApiResponse({ status: 200, description: 'Partially updated project', type: Project })
 patchProject(@Param('id') id: string, @Body() partialUpdateDto: Partial<Project>) {
   return this.projectService.update(id, partialUpdateDto);
+}
+@ApiOperation({ summary: 'Get sprints for a project' })
+@ApiResponse({ status: 200, description: 'List of sprints for the project', type: [Sprint] })
+@Get(':projectId/sprints')
+async getSprints(@Param('projectId') projectId: string): Promise<Sprint[]> {
+  return this.projectService.getSprintsByProjectId(projectId);
 }
 }

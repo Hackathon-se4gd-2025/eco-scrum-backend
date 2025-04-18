@@ -1,8 +1,9 @@
 // project/project.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Project, ProjectDocument } from './projects.schema'; // Import Project schema
+import { Sprint } from 'src/sprint/sprint.schema';
 
 @Injectable()
 export class ProjectService {
@@ -64,6 +65,16 @@ async addTeamMemberToProject(
   });
 
   return await project.save();
+}
+async getSprintsByProjectId(projectId: string): Promise<Sprint[]> {
+  // Check if the project exists
+  const project = await this.projectModel.findById(projectId);
+  if (!project) {
+    throw new NotFoundException(`Project with ID ${projectId} not found`);
+  }
+
+  // Fetch sprints for the project
+  return this.projectModel.find({ where: { projectId } });
 }
 
 }
