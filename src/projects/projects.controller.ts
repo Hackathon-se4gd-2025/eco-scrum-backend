@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Patch } from '@nestjs/common';
 import { ProjectService } from './projects.service';
 
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -43,4 +43,21 @@ export class ProjectController {
   remove(@Param('id') id: string) {
     return this.projectService.remove(id);
   }
+
+  @ApiOperation({ summary: 'Add team member to a project' })
+@ApiResponse({ status: 201, description: 'Team member added to project' })
+@Post(':projectId/team-members')
+async addTeamMember(
+  @Param('projectId') projectId: string,
+  @Body() newTeamMember: { userId: string; email: string; role: string },
+) {
+  return this.projectService.addTeamMemberToProject(projectId, newTeamMember);
+}
+
+@Patch(':id')
+@ApiOperation({ summary: 'Patch project by ID (partial update)' })
+@ApiResponse({ status: 200, description: 'Partially updated project', type: Project })
+patchProject(@Param('id') id: string, @Body() partialUpdateDto: Partial<Project>) {
+  return this.projectService.update(id, partialUpdateDto);
+}
 }

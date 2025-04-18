@@ -35,6 +35,37 @@ export class ProjectService {
   async remove(id: string) {
     return this.projectModel.findByIdAndDelete(id).exec(); // Delete the project
   }
+
+  // Add this inside your ProjectService class
+
+async addTeamMemberToProject(
+  projectId: string,
+  newTeamMember: { userId: string; email: string; role: string }
+) {
+  const project = await this.projectModel.findById(projectId);
+  if (!project) {
+    throw new Error('Project not found');
+  }
+
+  // Check if user is already a member
+  const isAlreadyMember = project.teamMembers.some(
+    (member: any) => member.userId?.toString() === newTeamMember.userId
+  );
+  if (isAlreadyMember) {
+    throw new Error('User is already part of the project');
+  }
+
+  // Add team member
+  project.teamMembers.push({
+    userId: newTeamMember.userId,
+    email: newTeamMember.email,
+    role: newTeamMember.role,
+    joinedAt: new Date().toISOString(),
+  });
+
+  return await project.save();
+}
+
 }
 export { Project };
 

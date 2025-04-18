@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { User } from './user.schema';
@@ -11,9 +11,16 @@ export class UserController {
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of users', type: [User] })
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query('email') email?: string) {
+    if (email) {
+      // If email is provided, find users by email
+      return this.userService.findByEmail(email);
+    } else {
+      // If no email is provided, find all users
+      return this.userService.findAll();
+    }
   }
+  
 
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: 200, description: 'User details', type: User })

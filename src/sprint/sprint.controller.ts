@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Patch } from '@nestjs/common';
 import { SprintService } from './sprint.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Sprint } from './sprint.schema';
@@ -42,4 +42,14 @@ export class SprintController {
   remove(@Param('id') id: string) {
     return this.sprintService.remove(id);
   }
+  
+  @Patch(':id/retrospective')
+@ApiOperation({ summary: 'Update retrospective field for a sprint' })
+@ApiResponse({ status: 200, description: 'Retrospective updated', type: Sprint })
+updateRetrospective(
+  @Param('id') id: string,
+  @Body() updateData: { retrospective: string }
+) {
+  return this.sprintService.updateRetrospective(id, updateData.retrospective);
+}
 }

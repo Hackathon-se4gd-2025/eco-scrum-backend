@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Patch } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Task } from './task.schema';
@@ -41,5 +41,12 @@ export class TaskController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.taskService.remove(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a task by ID' })
+  @ApiResponse({ status: 200, description: 'Task updated', type: Task })
+  updateTask(@Param('id') id: string, @Body() updateData: Partial<Task>) {
+    return this.taskService.update(id, updateData);
   }
 }

@@ -20,6 +20,10 @@ export class User {
   @Prop()
   @ApiProperty({ description: 'Avatar of the user' })
   avatar?: string;
+
+  @Prop({ required: true, select: false }) // select: false makes sure it's not returned by default
+@ApiProperty({ description: 'Hashed password of the user' })
+password: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
