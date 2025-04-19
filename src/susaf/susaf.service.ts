@@ -4,12 +4,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
 import * as dotenv from 'dotenv';
-import {OpenAI } from 'openai';
+import { OpenAI } from 'openai';
 import { Project } from 'src/projects/projects.schema';
-import { SustainabilityEffect, EffectDetail, Recommendation } from './susaf.schema';
+import { SustainabilityEffect, EffectDetail, Recommendation, ProjectApiToken } from './susaf.schema';
 import { BacklogItem } from 'src/backlog-item/backlog-item.schema';
 import { PRIORITY_LEVELS, TASK_STATUSES } from 'src/constants';
-
 
 dotenv.config(); // ✅ Load environment variables from .env
 
@@ -26,34 +25,35 @@ export class SusafService {
     @InjectModel(EffectDetail.name) private readonly effectDetailModel: Model<EffectDetail>,
     @InjectModel(Recommendation.name) private readonly recommendationModel: Model<Recommendation>,
     @InjectModel(BacklogItem.name) private readonly backlogItemModel: Model<BacklogItem>,
-    @InjectModel(Project.name) private readonly projectModel: Model<Project> // Add this line
+    @InjectModel(Project.name) private readonly projectModel: Model<Project>,
+    @InjectModel(ProjectApiToken.name) private readonly projectApiTokenModel: Model<ProjectApiToken>
   ) {
     this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY, 
-      });
+      apiKey: process.env.OPENAI_API_KEY,
+    });
   }
 
-async generateItemsFromRecommendations(projectId: string): Promise<any> {
-  try {
-    const project = await this.projectModel.findById(projectId);
-    if (!project) {
-      throw new Error('Project not found');
-    }
-    this.logger.log(`Generating items for project: ${project.name} (${projectId})`);
-    this.logger.log('Fetching recommendations from the database');
+  async generateItemsFromRecommendations(projectId: string): Promise<any> {
+    try {
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        throw new Error('Project not found');
+      }
+      this.logger.log(`Generating items for project: ${project.name} (${projectId})`);
+      this.logger.log('Fetching recommendations from the database');
 
-    // Fetch stored recommendations from the database
-    const recommendations = await this.recommendationModel.find();
+      // Fetch stored recommendations for this specific project
+      const recommendations = await this.recommendationModel.find({ projectId });
 
-    if (!recommendations.length) {
-      throw new Error('No recommendations found in the database.');
-    }
+      if (!recommendations.length) {
+        throw new Error(`No recommendations found for project ${projectId}.`);
+      }
 
-    // Extract recommendation texts
-    const recommendationTexts = recommendations.map(rec => Object.values(rec.recommendations)).flat();
+      // Extract recommendation texts
+      const recommendationTexts = recommendations.map(rec => Object.values(rec.recommendations)).flat();
 
-    // Prepare prompt
-    const prompt = `
+      // Prepare prompt
+      const prompt = `
 Given the following sustainability recommendations, generate structured backlog items.
 
 Recommendations:
@@ -79,212 +79,231 @@ For each backlog item, provide:
 Return the output as a JSON object with an "items" field containing an array of backlog items, matching the schema provided.
 `;
 
-    // OpenAI API call
-    const completion = await this.openai.chat.completions.create({
-      model: "gpt-4o-2024-08-06",
-      messages: [
-        { role: "user", content: prompt }
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "ProductItems",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              items: {
-                type: "array",
+      // OpenAI API call
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4o-2024-08-06",
+        messages: [
+          { role: "user", content: prompt }
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "ProductItems",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
                 items: {
-                  type: "object",
-                  properties: {
-                    title: { type: "string" },
-                    description: { type: "string" },
-                    priority: { type: "string", enum: PRIORITY_LEVELS },
-                    sustainable: { type: "boolean" },
-                    storyPoints: { type: "integer" },
-                    sustainabilityScore: { type: "integer" },
-                    status: { type: "string", enum: TASK_STATUSES },
-                    susafCategory: { type: "string" },
-                    assignedTo: { type: "string" },
-                    sprintId: { type: "string" },
-                    projectId: { type: "string" },
-                    sustainabilityPoints: { type: "integer" },
-                    relatedSusafEffects: {
-                      type: "array",
-                      items: { type: "string" }
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      priority: { type: "string", enum: PRIORITY_LEVELS },
+                      sustainable: { type: "boolean" },
+                      storyPoints: { type: "integer" },
+                      sustainabilityScore: { type: "integer" },
+                      status: { type: "string", enum: TASK_STATUSES },
+                      susafCategory: { type: "string" },
+                      assignedTo: { type: "string" },
+                      sprintId: { type: "string" },
+                      projectId: { type: "string" },
+                      sustainabilityPoints: { type: "integer" },
+                      relatedSusafEffects: {
+                        type: "array",
+                        items: { type: "string" }
+                      },
+                      definitionOfDone: { type: "string" },
+                      tags: {
+                        type: "array",
+                        items: { type: "string" }
+                      }
                     },
-                    definitionOfDone: { type: "string" },
-                    tags: {
-                      type: "array",
-                      items: { type: "string" }
-                    }
-                  },
-                  required: [
-                    "id",
-                    "title",
-                    "description",
-                    "priority",
-                    "sustainable",
-                    "storyPoints",
-                    "sustainabilityScore",
-                    "status",
-                    "projectId"
-                  ],
-                  additionalProperties: false
+                    required: [
+                      "id",
+                      "title",
+                      "description",
+                      "priority",
+                      "sustainable",
+                      "storyPoints",
+                      "sustainabilityScore",
+                      "status",
+                      "projectId"
+                    ],
+                    additionalProperties: false
+                  }
                 }
-              }
-            },
-            required: ["items"],
-            additionalProperties: false
+              },
+              required: ["items"],
+              additionalProperties: false
+            }
           }
-        }
-      },
-      temperature: 0.7
-    });
+        },
+        temperature: 0.7
+      });
 
-    this.logger.log('OpenAI Response:', completion);
+      this.logger.log('OpenAI Response:', completion);
 
-    if (!completion.choices[0].message.content) {
-      throw new Error('No content received from OpenAI');
-    }
-    const responseContent = JSON.parse(completion.choices[0].message.content);
+      if (!completion.choices[0].message.content) {
+        throw new Error('No content received from OpenAI');
+      }
+      const responseContent = JSON.parse(completion.choices[0].message.content);
 
-    // Transform and save items
-    const items = await this.backlogItemModel.insertMany(
-      responseContent.items.map(item => ({
-        title: item.title,
-        description: item.description,
-        priority: item.priority,
-        sustainable: item.sustainable,
-        storyPoints: item.storyPoints,
-        sustainabilityScore: item.sustainabilityScore,
-        status: item.status,
-        susafCategory: item.susafCategory || undefined,
-        assignedTo: item.assignedTo || undefined,
-        sprintId: item.sprintId || undefined,
-        projectId: projectId,
-        sustainabilityPoints: item.sustainabilityPoints || undefined,
-        relatedSusafEffects: item.relatedSusafEffects || [],
-        definitionOfDone: item.definitionOfDone || "",
-        tags: item.tags || []
-      }))
-    );
+      // Transform and save items
+      const items = await this.backlogItemModel.insertMany(
+        responseContent.items.map(item => ({
+          title: item.title,
+          description: item.description,
+          priority: item.priority,
+          sustainable: item.sustainable,
+          storyPoints: item.storyPoints,
+          sustainabilityScore: item.sustainabilityScore,
+          status: item.status,
+          susafCategory: item.susafCategory || undefined,
+          assignedTo: item.assignedTo || undefined,
+          sprintId: item.sprintId || undefined,
+          projectId: projectId,
+          sustainabilityPoints: item.sustainabilityPoints || undefined,
+          relatedSusafEffects: item.relatedSusafEffects || [],
+          definitionOfDone: item.definitionOfDone || "",
+          tags: item.tags || []
+        }))
+      );
 
-    return { message: 'Items generated and saved successfully', items };
+      return { message: 'Items generated and saved successfully', items };
 
-  } catch (error) {
-    this.logger.error(`Error generating items from recommendations: ${error.message}`);
-    throw new Error(`Failed to generate items from recommendations: ${error.message}`);
-  }
-}
-
-
-  async fetchAndStoreSustainabilityEffects(): Promise<any> {
-    try {
-        // Fetch Effects Data
-        const url = `${this.API_BASE_URL}/effects/${this.API_TOKEN}`;
-        this.logger.log(`Fetching Sustainability Effects from: ${url}`);
-
-        const response = await firstValueFrom(this.httpService.post(url));
-        if (!response || !response.data) {
-            throw new Error('No response received from the API');
-        }
-
-        const data = response.data;
-
-        // Process and Save Effects
-        const effectDocuments = await Promise.all(
-            data.effects.map(async (effect) => {
-                // Process Effect Details
-                const effectDetails = await Promise.all(
-                    effect.effects.map(async (detail) => {
-                        // ✅ Check if effect detail exists
-                        const existingEffectDetail = await this.effectDetailModel.findOne({ external_id: detail.id });
-
-                        if (existingEffectDetail) {
-                            // ✅ Update existing effect detail
-                            return await this.effectDetailModel.findOneAndUpdate(
-                                { external_id: detail.id },
-                                {
-                                    description: detail.description,
-                                    is_positive: detail.is_positive,
-                                    likelihood: detail.likelihood,
-                                    impact_level: detail.impact_level,
-                                    order_of_impact: detail.order_of_impact,
-                                    dimension_name: detail.dimension_name,
-                                    dimension_id: detail.dimension_id,
-                                    createdAt: new Date(detail.created_at),
-                                    updatedAt: new Date(detail.updated_at),
-                                    added_by_username: detail.added_by_username,
-                                    added_by_email: detail.added_by_email,
-                                    related_feature: detail.related_feature || null,
-                                },
-                                { new: true }
-                            );
-                        } else {
-                            // ✅ Create new effect detail if it doesn't exist
-                            return await this.effectDetailModel.create({
-                                external_id: detail.id,
-                                description: detail.description,
-                                is_positive: detail.is_positive,
-                                likelihood: detail.likelihood,
-                                impact_level: detail.impact_level,
-                                order_of_impact: detail.order_of_impact,
-                                dimension_name: detail.dimension_name,
-                                dimension_id: detail.dimension_id,
-                                createdAt: new Date(detail.created_at),
-                                updatedAt: new Date(detail.updated_at),
-                                added_by_username: detail.added_by_username,
-                                added_by_email: detail.added_by_email,
-                                related_feature: detail.related_feature || null,
-                            });
-                        }
-                    })
-                );
-
-                // ✅ Check if the main effect exists
-                const existingEffect = await this.effectModel.findOne({ external_id: effect.id });
-
-                if (existingEffect) {
-                    // ✅ Update existing effect
-                    return await this.effectModel.findOneAndUpdate(
-                        { external_id: effect.id },
-                        {
-                            name: effect.name,
-                            question: effect.question,
-                            capture_id: effect.capture_id,
-                            created_at: new Date(effect.created_at),
-                            effects: effectDetails.map((detail) => detail),
-                        },
-                        { new: true }
-                    );
-                } else {
-                    // ✅ Create new effect if it doesn't exist
-                    return await this.effectModel.create({
-                        external_id: effect.id,
-                        name: effect.name,
-                        question: effect.question,
-                        capture_id: effect.capture_id,
-                        created_at: new Date(effect.created_at),
-                        effects: effectDetails.map((detail) => detail),
-                    });
-                }
-            })
-        );
-
-        return { message: 'Sustainability effects saved successfully', effects: effectDocuments };
     } catch (error) {
-        this.logger.error(`Error fetching sustainability effects: ${error.message}`);
-        throw new Error(`Failed to fetch and save sustainability effects: ${error.message}`);
+      this.logger.error(`Error generating items from recommendations: ${error.message}`);
+      throw new Error(`Failed to generate items from recommendations: ${error.message}`);
     }
-}
+  }
 
-  async fetchAndStoreRecommendations(): Promise<any> {
+  async fetchAndStoreSustainabilityEffects(projectId: string): Promise<any> {
     try {
-      // Fetch Recommendations Data
-      const url = `${this.API_BASE_URL}/recommendations/${this.API_TOKEN}`;
-      this.logger.log(`Fetching Recommendations from: ${url}`);
+      // First check if we have a token for this project
+      const apiTokenDoc = await this.projectApiTokenModel.findOne({ projectId });
+      if (!apiTokenDoc) {
+        throw new Error(`No API token found for project ${projectId}`);
+      }
+
+      const token = apiTokenDoc.token;
+
+      // Fetch Effects Data using the project-specific token
+      const url = `${this.API_BASE_URL}/effects/${token}`;
+      this.logger.log(`Fetching Sustainability Effects for project ${projectId} from: ${url}`);
+
+      const response = await firstValueFrom(this.httpService.post(url));
+      if (!response || !response.data) {
+        throw new Error('No response received from the API');
+      }
+
+      const data = response.data;
+
+      // Process and Save Effects
+      const effectDocuments = await Promise.all(
+        data.effects.map(async (effect) => {
+          // Process Effect Details
+          const effectDetails = await Promise.all(
+            effect.effects.map(async (detail) => {
+              // ✅ Check if effect detail exists
+              const existingEffectDetail = await this.effectDetailModel.findOne({ external_id: detail.id });
+
+              if (existingEffectDetail) {
+                // ✅ Update existing effect detail
+                return await this.effectDetailModel.findOneAndUpdate(
+                  { external_id: detail.id },
+                  {
+                    description: detail.description,
+                    is_positive: detail.is_positive,
+                    likelihood: detail.likelihood,
+                    impact_level: detail.impact_level,
+                    order_of_impact: detail.order_of_impact,
+                    dimension_name: detail.dimension_name,
+                    dimension_id: detail.dimension_id,
+                    createdAt: new Date(detail.created_at),
+                    updatedAt: new Date(detail.updated_at),
+                    added_by_username: detail.added_by_username,
+                    added_by_email: detail.added_by_email,
+                    related_feature: detail.related_feature || null,
+                    projectId,
+                  },
+                  { new: true }
+                );
+              } else {
+                // ✅ Create new effect detail if it doesn't exist
+                return await this.effectDetailModel.create({
+                  external_id: detail.id,
+                  description: detail.description,
+                  is_positive: detail.is_positive,
+                  likelihood: detail.likelihood,
+                  impact_level: detail.impact_level,
+                  order_of_impact: detail.order_of_impact,
+                  dimension_name: detail.dimension_name,
+                  dimension_id: detail.dimension_id,
+                  createdAt: new Date(detail.created_at),
+                  updatedAt: new Date(detail.updated_at),
+                  added_by_username: detail.added_by_username,
+                  added_by_email: detail.added_by_email,
+                  related_feature: detail.related_feature || null,
+                  projectId,
+                });
+              }
+            })
+          );
+
+          // ✅ Check if the main effect exists
+          const existingEffect = await this.effectModel.findOne({ external_id: effect.id });
+
+          if (existingEffect) {
+            // ✅ Update existing effect
+            return await this.effectModel.findOneAndUpdate(
+              { external_id: effect.id },
+              {
+                name: effect.name,
+                question: effect.question,
+                capture_id: effect.capture_id,
+                created_at: new Date(effect.created_at),
+                effects: effectDetails.map((detail) => detail),
+                projectId,
+              },
+              { new: true }
+            );
+          } else {
+            // ✅ Create new effect if it doesn't exist
+            return await this.effectModel.create({
+              external_id: effect.id,
+              name: effect.name,
+              question: effect.question,
+              capture_id: effect.capture_id,
+              created_at: new Date(effect.created_at),
+              effects: effectDetails.map((detail) => detail),
+              projectId,
+            });
+          }
+        })
+      );
+
+      return { message: 'Sustainability effects saved successfully', effects: effectDocuments };
+    } catch (error) {
+      this.logger.error(`Error fetching sustainability effects: ${error.message}`);
+      throw new Error(`Failed to fetch and save sustainability effects: ${error.message}`);
+    }
+  }
+
+  async fetchAndStoreRecommendations(projectId: string): Promise<any> {
+    try {
+      // First check if we have a token for this project
+      const apiTokenDoc = await this.projectApiTokenModel.findOne({ projectId });
+      if (!apiTokenDoc) {
+        throw new Error(`No API token found for project ${projectId}`);
+      }
+
+      const token = apiTokenDoc.token;
+
+      // Fetch Recommendations Data using the project-specific token
+      const url = `${this.API_BASE_URL}/recommendations/${token}`;
+      this.logger.log(`Fetching Recommendations for project ${projectId} from: ${url}`);
 
       const response = await firstValueFrom(this.httpService.post(url));
       if (!response || !response.data) {
@@ -300,6 +319,7 @@ Return the output as a JSON object with an "items" field containing an array of 
             threats: rec.recommendation.threats,
             opportunities: rec.recommendation.opportunities,
             recommendations: rec.recommendation.recommendations,
+            projectId,
           })
         )
       );
@@ -308,6 +328,96 @@ Return the output as a JSON object with an "items" field containing an array of 
     } catch (error) {
       this.logger.error(`Error fetching recommendations: ${error.message}`);
       throw new Error(`Failed to fetch and save recommendations: ${error.message}`);
+    }
+  }
+
+  /**
+   * Save API token for a project
+   * @param projectId The project identifier
+   * @param token The API token to save
+   * @returns The saved token information
+   */
+  async saveApiToken(projectId: string, token: string) {
+    try {
+      this.logger.log(`Saving API token for project: ${projectId}`);
+
+      // Check if the project exists
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        this.logger.error(`Project with ID ${projectId} not found`);
+        return {
+          success: false,
+          message: 'Project not found'
+        };
+      }
+
+      // Use upsert to either create or update the token
+      const result = await this.projectApiTokenModel.findOneAndUpdate(
+        { projectId },
+        { projectId, token },
+        { upsert: true, new: true }
+      );
+
+      this.logger.log(`API token saved successfully for project: ${projectId}`);
+
+      return {
+        success: true,
+        message: 'API token saved successfully',
+        data: {
+          projectId: result.projectId,
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Error saving API token: ${error.message}`);
+      return {
+        success: false,
+        message: `Failed to save API token: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Get API token for a project
+   * @param projectId The project identifier
+   * @returns The token information
+   */
+  async getApiToken(projectId: string) {
+    try {
+      this.logger.log(`Retrieving API token for project: ${projectId}`);
+
+      // Check if the project exists
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        this.logger.error(`Project with ID ${projectId} not found`);
+        return {
+          success: false,
+          message: 'Project not found'
+        };
+      }
+
+      const token = await this.projectApiTokenModel.findOne({ projectId });
+
+      if (!token) {
+        this.logger.warn(`No API token found for project: ${projectId}`);
+        return {
+          success: false,
+          message: 'No API token found for this project'
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          projectId: token.projectId,
+          token: token.token,
+        }
+      };
+    } catch (error) {
+      this.logger.error(`Error retrieving API token: ${error.message}`);
+      return {
+        success: false,
+        message: `Failed to retrieve API token: ${error.message}`
+      };
     }
   }
 }

@@ -9,18 +9,18 @@ export class SusafController {
    * Fetch and store sustainability effects from SuSAF API
    * @returns Success message with stored effects
    */
-  @Post('effects')
-  async fetchEffects() {
-    return this.susafService.fetchAndStoreSustainabilityEffects();
+  @Post('effects/:projectId')
+  async fetchEffects(@Param('projectId') projectId: string) {
+    return this.susafService.fetchAndStoreSustainabilityEffects(projectId);
   }
 
   /**
    * Fetch and store AI-generated recommendations from SuSAF API
    * @returns Success message with stored recommendations
    */
-  @Post('recommendations')
-  async fetchRecommendations() {
-    return this.susafService.fetchAndStoreRecommendations();
+  @Post('recommendations/:projectId')
+  async fetchRecommendations(@Param('projectId') projectId: string) {
+    return this.susafService.fetchAndStoreRecommendations(projectId);
   }
 
   /**
@@ -42,7 +42,7 @@ export class SusafController {
     @Param('projectId') projectId: string,
     @Body() body: { token: string }
   ) {
-    //return this.susafService.saveApiToken(projectId, body.token);
+    return this.susafService.saveApiToken(projectId, body.token);
   }
 
   /**
@@ -52,6 +52,6 @@ export class SusafController {
    */
   @Get('token/:projectId')
   async getApiToken(@Param('projectId') projectId: string) {
-    //return this.susafService.getApiToken(projectId);
+    return this.susafService.getApiToken(projectId);
   }
 }

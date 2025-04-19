@@ -35,6 +35,9 @@ export class EffectDetail extends Document {
 
   @Prop({ type: String, default: null })
   related_feature?: string;
+
+  @Prop({ type: String, required: false, index: true })
+  projectId?: string; // Add projectId field to connect to a specific project
 }
 
 export const EffectDetailSchema = SchemaFactory.createForClass(EffectDetail);
@@ -55,6 +58,9 @@ export class SustainabilityEffect extends Document {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'EffectDetail' }] })
   effects: Types.ObjectId[];
+
+  @Prop({ type: String, required: false, index: true })
+  projectId?: string; // Add projectId field to connect to a specific project
 }
 
 export const SustainabilityEffectSchema = SchemaFactory.createForClass(SustainabilityEffect);
@@ -69,6 +75,20 @@ export class Recommendation extends Document {
 
   @Prop({ type: Map, of: String }) // ✅ Explicitly define as a key-value object
   recommendations: Record<string, string>;
+
+  @Prop({ type: String, required: false, index: true })
+  projectId?: string; // Add projectId field to connect to a specific project
 }
 
 export const RecommendationSchema = SchemaFactory.createForClass(Recommendation);
+
+@Schema({ timestamps: true }) // Add timestamps to include createdAt and updatedAt
+export class ProjectApiToken extends Document {
+  @Prop({ required: true, index: true })
+  projectId: string;
+
+  @Prop({ required: true })
+  token: string;
+}
+
+export const ProjectApiTokenSchema = SchemaFactory.createForClass(ProjectApiToken);

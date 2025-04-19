@@ -1,25 +1,31 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
-import { EffectDetail, EffectDetailSchema, Recommendation, RecommendationSchema, SustainabilityEffect, SustainabilityEffectSchema } from './susaf.schema';
-import { Project, ProjectSchema } from 'src/projects/projects.schema';
 import { SusafController } from './susaf.controller';
 import { SusafService } from './susaf.service';
-import { BacklogItem } from 'src/backlog-item/backlog-item.schema';
-
+import { 
+  SustainabilityEffect, SustainabilityEffectSchema,
+  EffectDetail, EffectDetailSchema,
+  Recommendation, RecommendationSchema,
+  ProjectApiToken, ProjectApiTokenSchema
+} from './susaf.schema';
+import { BacklogItem, BacklogItemSchema } from 'src/backlog-item/backlog-item.schema';
+import { Project, ProjectSchema } from 'src/projects/projects.schema';
 
 @Module({
   imports: [
-    HttpModule, // ✅ Allows HTTP requests to external APIs
+    HttpModule,
     MongooseModule.forFeature([
       { name: SustainabilityEffect.name, schema: SustainabilityEffectSchema },
       { name: EffectDetail.name, schema: EffectDetailSchema },
       { name: Recommendation.name, schema: RecommendationSchema },
-      { name: BacklogItem.name, schema: BacklogItem },
+      { name: BacklogItem.name, schema: BacklogItemSchema },
       { name: Project.name, schema: ProjectSchema },
+      { name: ProjectApiToken.name, schema: ProjectApiTokenSchema }
     ]),
   ],
   controllers: [SusafController],
   providers: [SusafService],
+  exports: [SusafService],
 })
 export class SusafModule {}
