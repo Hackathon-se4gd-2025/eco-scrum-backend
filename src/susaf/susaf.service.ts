@@ -189,11 +189,14 @@ Return the output as a JSON object with an "items" field containing an array of 
 
       const token = apiTokenDoc.token;
 
-      // Fetch Effects Data using the project-specific token
+      
+      // Use token in URL path, like in the recommendations method
       const url = `${this.API_BASE_URL}/effects/${token}`;
       this.logger.log(`Fetching Sustainability Effects for project ${projectId} from: ${url}`);
 
+      // Keep it consistent with your recommendations method
       const response = await firstValueFrom(this.httpService.post(url));
+      
       if (!response || !response.data) {
         throw new Error('No response received from the API');
       }
