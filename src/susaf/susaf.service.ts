@@ -423,4 +423,92 @@ Return the output as a JSON object with an "items" field containing an array of 
       };
     }
   }
+
+  /**
+   * Get sustainability effects for a project
+   * @param projectId The project identifier
+   * @returns The sustainability effects for the project
+   */
+  async getSustainabilityEffects(projectId: string) {
+    try {
+      this.logger.log(`Getting sustainability effects for project: ${projectId}`);
+
+      // Check if the project exists
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        this.logger.error(`Project with ID ${projectId} not found`);
+        return {
+          success: false,
+          message: 'Project not found'
+        };
+      }
+
+      // Find all sustainability effects for this project
+      const effects = await this.effectModel.find({ projectId })
+        .populate('effects')
+        .exec();
+
+      if (!effects || effects.length === 0) {
+        return {
+          success: true,
+          message: 'No sustainability effects found for this project',
+          data: []
+        };
+      }
+
+      return {
+        success: true,
+        data: effects
+      };
+    } catch (error) {
+      this.logger.error(`Error retrieving sustainability effects: ${error.message}`);
+      return {
+        success: false,
+        message: `Failed to retrieve sustainability effects: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Get recommendations for a project
+   * @param projectId The project identifier
+   * @returns The recommendations for the project
+   */
+  async getRecommendations(projectId: string) {
+    try {
+      this.logger.log(`Getting recommendations for project: ${projectId}`);
+
+      // Check if the project exists
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        this.logger.error(`Project with ID ${projectId} not found`);
+        return {
+          success: false,
+          message: 'Project not found'
+        };
+      }
+
+      // Find all recommendations for this project
+      const recommendations = await this.recommendationModel.find({ projectId });
+
+      if (!recommendations || recommendations.length === 0) {
+        return {
+          success: true,
+          message: 'No recommendations found for this project',
+          data: []
+        };
+      }
+
+      return {
+        success: true,
+        data: recommendations
+      };
+    } catch (error) {
+      this.logger.error(`Error retrieving recommendations: ${error.message}`);
+      return {
+        success: false,
+        message: `Failed to retrieve recommendations: ${error.message}`
+      };
+    }
+  }
 }

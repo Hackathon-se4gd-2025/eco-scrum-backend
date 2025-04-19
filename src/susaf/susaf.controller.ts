@@ -22,6 +22,19 @@ export class SusafController {
   }
 
   /**
+   * Get sustainability effects for a specific project
+   * @param projectId The project identifier
+   * @returns The sustainability effects for the project
+   */
+  @Get('effects/:projectId')
+  @ApiParam({ name: 'projectId', description: 'Project identifier' })
+  @ApiOperation({ summary: 'Get sustainability effects by project ID' })
+  @ApiResponse({ status: 200, description: 'Returns sustainability effects for the project' })
+  async getEffects(@Param('projectId') projectId: string) {
+    return this.susafService.getSustainabilityEffects(projectId);
+  }
+
+  /**
    * Fetch and store AI-generated recommendations from SuSAF API
    * @returns Success message with stored recommendations
    */
@@ -29,6 +42,19 @@ export class SusafController {
   @ApiParam({ name: 'projectId', description: 'Project identifier' })
   async fetchRecommendations(@Param('projectId') projectId: string) {
     return this.susafService.fetchAndStoreRecommendations(projectId);
+  }
+
+  /**
+   * Get recommendations for a specific project
+   * @param projectId The project identifier
+   * @returns The recommendations for the project
+   */
+  @Get('recommendations/:projectId')
+  @ApiParam({ name: 'projectId', description: 'Project identifier' })
+  @ApiOperation({ summary: 'Get recommendations by project ID' })
+  @ApiResponse({ status: 200, description: 'Returns recommendations for the project' })
+  async getRecommendations(@Param('projectId') projectId: string) {
+    return this.susafService.getRecommendations(projectId);
   }
 
   /**
