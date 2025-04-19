@@ -8,17 +8,24 @@ import { TaskModule } from './task/task.module';
 import { SprintModule } from './sprint/sprint.module';
 import { TeamMemberModule } from './team-member/team-member.module';
 import { BacklogItemModule } from './backlog-item/backlog-item.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 
 @Module({
   imports:[
+  ConfigModule.forRoot({ isGlobal: true }),
   UserModule,
   ProjectModule,
   TaskModule,
   SprintModule,
   TeamMemberModule,
   BacklogItemModule,
-  MongooseModule.forRoot('mongodb+srv://admin:hyYFr82agsUAkXQx@susafscrum.xvvfz.mongodb.net/?retryWrites=true&w=majority&appName=SuSAFScrum')
-  ]
+  MongooseModule.forRootAsync({
+    imports: [ConfigModule],
+    useFactory: async (configService: ConfigService) => ({
+      uri: configService.get<string>('MONGODB_URI'),
+    }),
+    inject: [ConfigService],
+  }),  ]
 })
 export class AppModule {}
