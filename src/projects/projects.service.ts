@@ -3,12 +3,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Project, ProjectDocument } from './projects.schema'; // Import Project schema
-import { Sprint } from 'src/sprint/sprint.schema';
+import { Sprint, SprintDocument } from 'src/sprint/sprint.schema';
 
 @Injectable()
 export class ProjectService {
   constructor(
     @InjectModel(Project.name) private projectModel: Model<ProjectDocument>, // Inject the Project model
+    @InjectModel(Sprint.name) private sprintModel: Model<SprintDocument>, // Inject the Sprint model
   ) {}
 
   // Get all projects
@@ -73,8 +74,8 @@ async getSprintsByProjectId(projectId: string): Promise<Sprint[]> {
     throw new NotFoundException(`Project with ID ${projectId} not found`);
   }
 
-  // Fetch sprints for the project
-  return this.projectModel.find({ where: { projectId } });
+    // Fetch sprints with matching projectId
+    return this.sprintModel.find({ projectId }).exec();
 }
 
 }
