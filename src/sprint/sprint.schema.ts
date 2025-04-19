@@ -47,6 +47,10 @@ export class Sprint {
   @Prop()
   projectId: string;
 
+  @Prop({ default: false })
+  @ApiProperty({ description: 'Sprint completed', type: Boolean, default: 'false' })
+  completed: boolean;
+
   @ApiProperty({
     description: 'Retrospective information for the sprint',
     type: Object,

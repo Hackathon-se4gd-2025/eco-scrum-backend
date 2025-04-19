@@ -52,5 +52,8 @@ updateRetrospective(
 ) {
   return this.sprintService.updateRetrospective(id, updateData.retrospective);
 }
-
+@Patch(':id/complete')
+async completeSprint(@Param('id') id: string) {
+  return this.sprintService.completeSprint(id);
+}
 }

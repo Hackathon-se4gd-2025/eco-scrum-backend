@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Sprint, SprintDocument } from './sprint.schema';
@@ -39,4 +39,22 @@ export class SprintService {
       { new: true }
     ).exec();
   }
+  
+  async completeSprint(id: string) {
+    const sprint = await this.sprintModel.findById(id);
+    if (!sprint) {
+      throw new NotFoundException('Sprint not found');
+    }
+  
+    if (sprint.completed === true) {
+      throw new BadRequestException('Sprint is already completed');
+    }
+  
+    sprint.completed = true;
+    sprint.endDate = new Date().toDateString(); // optional field if you want to track this
+    await sprint.save();
+  
+    return { message: 'Sprint completed successfully', sprint };
+  }
+  
 }
