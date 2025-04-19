@@ -8,10 +8,6 @@ export type ProjectDocument = Project & Document;
 
 @Schema()
 export class Project {
-   @ApiProperty({ description: 'Auto-generated ObjectId', type: String })
-   @Prop({ type: mongoose.Schema.Types.ObjectId, auto: true }) // Auto-generated ObjectId
-  id: string;
-
   @ApiProperty({ description: 'Name of the project', type: String })
   @Prop({ required: true })
   name: string;
@@ -38,3 +34,12 @@ export class Project {
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);
+
+ProjectSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_, ret) => {
+    ret.id = ret._id.toString(); // copy _id to id
+    delete ret._id;              // remove _id
+  },
+});

@@ -25,3 +25,11 @@ export class TeamMember {
 }
 
 export const TeamMemberSchema = SchemaFactory.createForClass(TeamMember);
+TeamMemberSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_, ret) => {
+    ret.id = ret._id.toString(); // copy _id to id
+    delete ret._id;              // remove _id
+  },
+});

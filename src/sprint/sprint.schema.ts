@@ -7,10 +7,6 @@ export type SprintDocument = Sprint & Document;
 
 @Schema()
 export class Sprint {
-   @ApiProperty({ description: 'Auto-generated ObjectId', type: String })
-   @Prop({ type: mongoose.Schema.Types.ObjectId, auto: true }) // Auto-generated ObjectId
-  id: string;
-
   @ApiProperty({ description: 'Name of the sprint', type: String })
   @Prop()
   name: string;
@@ -74,3 +70,11 @@ export class Sprint {
 }
 
 export const SprintSchema = SchemaFactory.createForClass(Sprint);
+SprintSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_, ret) => {
+    ret.id = ret._id.toString(); // copy _id to id
+    delete ret._id;              // remove _id
+  },
+});

@@ -14,7 +14,7 @@ export class SprintService {
 
   // Get sprint by ID
   async findOne(id: string): Promise<Sprint | null > {
-    return this.sprintModel.findOne({ id }).exec();
+    return this.sprintModel.findById(id).exec();
   }
 
   // Create a new sprint

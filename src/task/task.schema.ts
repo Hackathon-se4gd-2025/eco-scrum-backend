@@ -7,10 +7,6 @@ export type TaskDocument = Task & Document;
 
 @Schema()
 export class Task {
-   @ApiProperty({ description: 'Auto-generated ObjectId', type: String })
-   @Prop({ type: mongoose.Schema.Types.ObjectId, auto: true }) // Auto-generated ObjectId
-  id: string;
-
   @ApiProperty({ description: 'Title of the task', type: String })
   @Prop()
   title: string;
@@ -89,3 +85,12 @@ export class Task {
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);
+
+TaskSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_, ret) => {
+    ret.id = ret._id.toString(); // copy _id to id
+    delete ret._id;              // remove _id
+  },
+});

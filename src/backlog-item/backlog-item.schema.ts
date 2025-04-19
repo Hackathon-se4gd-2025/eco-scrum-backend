@@ -7,10 +7,6 @@ export type BacklogItemDocument = BacklogItem & Document;
 
 @Schema()
 export class BacklogItem {
-   @ApiProperty({ description: 'Auto-generated ObjectId', type: String })
-   @Prop({ type: mongoose.Schema.Types.ObjectId, auto: true }) // Auto-generated ObjectId
-  id: string;
-
   @ApiProperty({ description: 'Title of the backlog item', type: String })
   @Prop()
   title: string;
@@ -73,3 +69,11 @@ export class BacklogItem {
 }
 
 export const BacklogItemSchema = SchemaFactory.createForClass(BacklogItem);
+BacklogItemSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  transform: (_, ret) => {
+    ret.id = ret._id.toString(); // copy _id to id
+    delete ret._id;              // remove _id
+  },
+});
