@@ -9,4 +9,4 @@ import { MongooseModule } from '@nestjs/mongoose';
   controllers: [TaskController],
   providers: [TaskService],
 })
-export class TaskModule {}
+export class TaskModule { }

@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   async login({ email, password }: { email: string; password: string }) {
     const user = await this.userService.findOneByEmailWithPassword(email);

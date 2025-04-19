@@ -7,7 +7,7 @@ import { BacklogItem } from './backlog-item.schema';
 @ApiTags('backlogItems')
 @Controller('backlog-items')
 export class BacklogItemController {
-  constructor(private readonly backlogItemService: BacklogItemService) {}
+  constructor(private readonly backlogItemService: BacklogItemService) { }
 
   @ApiOperation({ summary: 'Get all backlog items' })
   @ApiResponse({ status: 200, description: 'List of backlog items', type: [BacklogItem] })

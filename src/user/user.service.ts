@@ -6,7 +6,7 @@ import { User, UserDocument } from './user.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) { }
 
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
@@ -43,5 +43,5 @@ export class UserService {
   async findOneByEmailWithPassword(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email }).select('+password').exec();
   }
-  
+
 }

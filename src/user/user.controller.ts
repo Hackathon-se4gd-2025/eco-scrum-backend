@@ -6,7 +6,7 @@ import { User } from './user.schema';
 @ApiTags('users')
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'List of users', type: [User] })
@@ -20,7 +20,7 @@ export class UserController {
       return this.userService.findAll();
     }
   }
-  
+
 
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: 200, description: 'User details', type: User })

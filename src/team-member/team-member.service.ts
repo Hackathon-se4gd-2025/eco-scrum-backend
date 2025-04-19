@@ -8,7 +8,7 @@ import { TeamMember, TeamMemberDocument } from './team-member.schema'; // Import
 export class TeamMemberService {
   constructor(
     @InjectModel(TeamMember.name) private teamMemberModel: Model<TeamMemberDocument>, // Inject the TeamMember model
-  ) {}
+  ) { }
 
   // Get all team members
   async findAll() {

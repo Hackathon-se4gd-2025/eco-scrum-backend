@@ -6,7 +6,7 @@ import { Task } from './task.schema';
 @ApiTags('tasks')
 @Controller('tasks')
 export class TaskController {
-  constructor(private readonly taskService: TaskService) {}
+  constructor(private readonly taskService: TaskService) { }
 
   @ApiOperation({ summary: 'Get all tasks' })
   @ApiResponse({ status: 200, description: 'List of tasks', type: [Task] })

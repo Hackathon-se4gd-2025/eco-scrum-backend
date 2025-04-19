@@ -8,7 +8,7 @@ import { BacklogItem, BacklogItemDocument } from './backlog-item.schema'; // Imp
 export class BacklogItemService {
   constructor(
     @InjectModel(BacklogItem.name) private backlogItemModel: Model<BacklogItemDocument>, // Inject the BacklogItem model
-  ) {}
+  ) { }
 
   // Get all backlog items
   async findAll() {

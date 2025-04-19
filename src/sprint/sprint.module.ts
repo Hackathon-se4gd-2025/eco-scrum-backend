@@ -9,5 +9,5 @@ import { Sprint, SprintSchema } from './sprint.schema';
   controllers: [SprintController],
   providers: [SprintService],
 })
-export class SprintModule {}
+export class SprintModule { }
 

@@ -6,7 +6,7 @@ import { TeamMember } from './team-member.schema';
 @ApiTags('teamMembers')
 @Controller('team-members')
 export class TeamMemberController {
-  constructor(private readonly teamMemberService: TeamMemberService) {}
+  constructor(private readonly teamMemberService: TeamMemberService) { }
 
   @ApiOperation({ summary: 'Get all team members' })
   @ApiResponse({ status: 200, description: 'List of team members', type: [TeamMember] })

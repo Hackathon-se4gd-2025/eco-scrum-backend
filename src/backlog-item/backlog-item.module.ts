@@ -10,4 +10,4 @@ import { MongooseModule } from '@nestjs/mongoose';
   controllers: [BacklogItemController],
   providers: [BacklogItemService],
 })
-export class BacklogItemModule {}
+export class BacklogItemModule { }

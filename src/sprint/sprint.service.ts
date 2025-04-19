@@ -5,7 +5,7 @@ import { Sprint, SprintDocument } from './sprint.schema';
 
 @Injectable()
 export class SprintService {
-  constructor(@InjectModel(Sprint.name) private sprintModel: Model<SprintDocument>) {}
+  constructor(@InjectModel(Sprint.name) private sprintModel: Model<SprintDocument>) { }
 
   // Get all sprints
   async findAll(): Promise<Sprint[]> {
@@ -13,7 +13,7 @@ export class SprintService {
   }
 
   // Get sprint by ID
-  async findOne(id: string): Promise<Sprint | null > {
+  async findOne(id: string): Promise<Sprint | null> {
     return this.sprintModel.findById(id).exec();
   }
 
@@ -24,12 +24,12 @@ export class SprintService {
   }
 
   // Update sprint by ID
-  async update(id: string, updateData: any): Promise<Sprint | null > {
+  async update(id: string, updateData: any): Promise<Sprint | null> {
     return this.sprintModel.findOneAndUpdate({ id }, updateData, { new: true }).exec();
   }
 
   // Delete sprint by ID
-  async remove(id: string): Promise<any | null > {
+  async remove(id: string): Promise<any | null> {
     return this.sprintModel.findOneAndDelete({ id }).exec();
   }
   async updateRetrospective(id: string, retrospective: Sprint['retrospective']) {
@@ -42,22 +42,22 @@ export class SprintService {
       { new: true }
     ).exec();
   }
-  
+
   async completeSprint(id: string) {
     const sprint = await this.sprintModel.findById(id);
     if (!sprint) {
       throw new NotFoundException('Sprint not found');
     }
-  
+
     if (sprint.completed === true) {
       throw new BadRequestException('Sprint is already completed');
     }
-  
+
     sprint.completed = true;
     sprint.endDate = new Date().toDateString(); // optional field if you want to track this
     await sprint.save();
-  
+
     return { message: 'Sprint completed successfully', sprint };
   }
-  
+
 }

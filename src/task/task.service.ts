@@ -8,7 +8,7 @@ import { Task, TaskDocument } from './task.schema'; // Import Task schema
 export class TaskService {
   constructor(
     @InjectModel(Task.name) private taskModel: Model<TaskDocument>, // Inject the Task model
-  ) {}
+  ) { }
 
   // Get all tasks
   async findAll() {

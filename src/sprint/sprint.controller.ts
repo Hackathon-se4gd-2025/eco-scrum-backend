@@ -6,7 +6,7 @@ import { Sprint } from './sprint.schema';
 @ApiTags('sprints')
 @Controller('sprints')
 export class SprintController {
-  constructor(private readonly sprintService: SprintService) {}
+  constructor(private readonly sprintService: SprintService) { }
 
   @ApiOperation({ summary: 'Get all sprints' })
   @ApiResponse({ status: 200, description: 'List of sprints', type: [Sprint] })
@@ -44,21 +44,21 @@ export class SprintController {
   }
 
   @Patch(':id/retrospective')
-@ApiOperation({ summary: 'Update retrospective field for a sprint' })
-@ApiResponse({ status: 200, description: 'Retrospective updated', type: Sprint })
-updateRetrospective(
-  @Param('id') id: string,
-  @Body() updateData: {
-    goalMet: 'Yes' | 'No' | 'Partially';
-    inefficientProcesses: string;
-    improvements: string;
-    teamNotes: string;
+  @ApiOperation({ summary: 'Update retrospective field for a sprint' })
+  @ApiResponse({ status: 200, description: 'Retrospective updated', type: Sprint })
+  updateRetrospective(
+    @Param('id') id: string,
+    @Body() updateData: {
+      goalMet: 'Yes' | 'No' | 'Partially';
+      inefficientProcesses: string;
+      improvements: string;
+      teamNotes: string;
+    }
+  ) {
+    return this.sprintService.updateRetrospective(id, updateData);
   }
-) {
-  return this.sprintService.updateRetrospective(id, updateData);
-}
-@Patch(':id/complete')
-async completeSprint(@Param('id') id: string) {
-  return this.sprintService.completeSprint(id);
-}
+  @Patch(':id/complete')
+  async completeSprint(@Param('id') id: string) {
+    return this.sprintService.completeSprint(id);
+  }
 }
