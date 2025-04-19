@@ -32,7 +32,10 @@ export class SprintService {
   async remove(id: string): Promise<any | null > {
     return this.sprintModel.findOneAndDelete({ id }).exec();
   }
-  async updateRetrospective(id: string, retrospective: string) {
+  async updateRetrospective(id: string, retrospective: Sprint['retrospective']) {
+    if (!id) {
+      throw new Error('Sprint ID is required');
+    }
     return this.sprintModel.findByIdAndUpdate(
       id,
       { retrospective },

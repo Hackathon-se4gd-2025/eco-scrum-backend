@@ -48,9 +48,14 @@ export class SprintController {
 @ApiResponse({ status: 200, description: 'Retrospective updated', type: Sprint })
 updateRetrospective(
   @Param('id') id: string,
-  @Body() updateData: { retrospective: string }
+  @Body() updateData: {
+    goalMet: 'Yes' | 'No' | 'Partially';
+    inefficientProcesses: string;
+    improvements: string;
+    teamNotes: string;
+  }
 ) {
-  return this.sprintService.updateRetrospective(id, updateData.retrospective);
+  return this.sprintService.updateRetrospective(id, updateData);
 }
 @Patch(':id/complete')
 async completeSprint(@Param('id') id: string) {
