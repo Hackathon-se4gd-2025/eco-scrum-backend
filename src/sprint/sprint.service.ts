@@ -56,5 +56,9 @@ export class SprintService {
   
     return { message: 'Sprint completed successfully', sprint };
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5c1602c (Add endpoint to complete sprint)
   
 }
