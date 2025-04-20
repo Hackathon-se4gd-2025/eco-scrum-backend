@@ -39,9 +39,9 @@ export class Sprint {
   @Prop()
   effectsTackled: number;
 
-  @ApiProperty({ description: 'List of task IDs associated with the sprint', type: [String] })
+  @ApiProperty({ description: 'List of items IDs associated with the sprint', type: [String] })
   @Prop({ type: [String] })
-  tasks: string[];
+  items: string[];
 
   @ApiProperty({ description: 'Project ID to which the sprint belongs', type: String })
   @Prop()
