@@ -10,6 +10,7 @@ import { TeamMemberModule } from './team-member/team-member.module';
 import { BacklogItemModule } from './backlog-item/backlog-item.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SusafModule } from './susaf/susaf.module';
+import { ItemModule } from './item/item.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { SusafModule } from './susaf/susaf.module';
   TeamMemberModule,
   BacklogItemModule,
   SusafModule,
+  ItemModule,
   MongooseModule.forRootAsync({
     imports: [ConfigModule],
     useFactory: async (configService: ConfigService) => ({
