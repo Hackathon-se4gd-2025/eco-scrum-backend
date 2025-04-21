@@ -11,6 +11,8 @@ import {
 } from './susaf.schema';
 import { BacklogItem, BacklogItemSchema } from 'src/backlog-item/backlog-item.schema';
 import { Project, ProjectSchema } from 'src/projects/projects.schema';
+import { ItemModule } from '../item/item.module';
+import { Item, ItemSchema } from 'src/item/item.schema';
 
 @Module({
   imports: [
@@ -19,10 +21,10 @@ import { Project, ProjectSchema } from 'src/projects/projects.schema';
       { name: SustainabilityEffect.name, schema: SustainabilityEffectSchema },
       { name: EffectDetail.name, schema: EffectDetailSchema },
       { name: Recommendation.name, schema: RecommendationSchema },
-      { name: BacklogItem.name, schema: BacklogItemSchema },
+      { name: Item.name, schema: ItemSchema },
       { name: Project.name, schema: ProjectSchema },
       { name: ProjectApiToken.name, schema: ProjectApiTokenSchema }
-    ]),
+    ])    ,
   ],
   controllers: [SusafController],
   providers: [SusafService],

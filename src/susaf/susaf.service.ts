@@ -7,7 +7,7 @@ import * as dotenv from 'dotenv';
 import { OpenAI } from 'openai';
 import { Project } from 'src/projects/projects.schema';
 import { SustainabilityEffect, EffectDetail, Recommendation, ProjectApiToken } from './susaf.schema';
-import { BacklogItem } from 'src/backlog-item/backlog-item.schema';
+import { Item } from 'src/item/item.schema'; // Add this import
 import { PRIORITY_LEVELS, TASK_STATUSES } from 'src/constants';
 
 dotenv.config(); // ✅ Load environment variables from .env
@@ -24,7 +24,7 @@ export class SusafService {
     @InjectModel(SustainabilityEffect.name) private readonly effectModel: Model<SustainabilityEffect>,
     @InjectModel(EffectDetail.name) private readonly effectDetailModel: Model<EffectDetail>,
     @InjectModel(Recommendation.name) private readonly recommendationModel: Model<Recommendation>,
-    @InjectModel(BacklogItem.name) private readonly backlogItemModel: Model<BacklogItem>,
+    @InjectModel(Item.name) private readonly itemModel: Model<Item>, // Changed from BacklogItem to Item
     @InjectModel(Project.name) private readonly projectModel: Model<Project>,
     @InjectModel(ProjectApiToken.name) private readonly projectApiTokenModel: Model<ProjectApiToken>
   ) {
@@ -51,30 +51,30 @@ export class SusafService {
 
       // Extract recommendation texts
       const recommendationTexts = recommendations.map(rec => Object.values(rec.recommendations)).flat();
+      const threats = recommendations.map(rec => Object.values(rec.threats)).flat();
+      const opportunities = recommendations.map(rec => Object.values(rec.opportunities)).flat();
 
       // Prepare prompt
       const prompt = `
-Given the following sustainability recommendations, generate structured backlog items.
+Given the following sustainability recommendations, threats and opportunities, generate three structured backlog items.
 
 Recommendations:
 ${recommendationTexts.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
+Threats:
+${threats.map((threat, index) => `${index + 1}. ${threat}`).join('\n')}
+
+Opportunities:
+${opportunities.map((opp, index) => `${index + 1}. ${opp}`).join('\n')}
+
 For each backlog item, provide:
 - title (string)
 - description (string)
-- priority (string, one of: ["Low", "Low+", "Medium", "Medium+", "High", "High+"])
-- sustainable (boolean)
+- priority (string, one of: ["Low", "Medium", "High"])
 - storyPoints (integer)
-- sustainabilityScore (integer, 1-10)
-- status (string, one of: "To Do", "In Progress", "Done")
-- susafCategory (string, optional)
-- assignedTo (string, optional)
-- sprintId (string, optional)
-- projectId (string, use: ${projectId})
 - sustainabilityPoints (integer, optional)
-- relatedSusafEffects (array of strings, optional)
 - definitionOfDone (string, optional)
-- tags (array of strings, optional)
+- sustainabilityContext (string, optional)
 
 Return the output as a JSON object with an "items" field containing an array of backlog items, matching the schema provided.
 `;
@@ -88,7 +88,7 @@ Return the output as a JSON object with an "items" field containing an array of 
         response_format: {
           type: "json_schema",
           json_schema: {
-            name: "ProductItems",
+            name: "Items",
             strict: true,
             schema: {
               type: "object",
@@ -100,36 +100,20 @@ Return the output as a JSON object with an "items" field containing an array of 
                     properties: {
                       title: { type: "string" },
                       description: { type: "string" },
-                      priority: { type: "string", enum: PRIORITY_LEVELS },
-                      sustainable: { type: "boolean" },
+                      priority: { type: "string", enum: ["Low", "Medium", "High"] },
                       storyPoints: { type: "integer" },
-                      sustainabilityScore: { type: "integer" },
-                      status: { type: "string", enum: TASK_STATUSES },
-                      susafCategory: { type: "string" },
-                      assignedTo: { type: "string" },
-                      sprintId: { type: "string" },
-                      projectId: { type: "string" },
                       sustainabilityPoints: { type: "integer" },
-                      relatedSusafEffects: {
-                        type: "array",
-                        items: { type: "string" }
-                      },
                       definitionOfDone: { type: "string" },
-                      tags: {
-                        type: "array",
-                        items: { type: "string" }
-                      }
+                      sustainabilityContext: { type: "string" },
                     },
                     required: [
-                      "id",
                       "title",
                       "description",
                       "priority",
-                      "sustainable",
                       "storyPoints",
-                      "sustainabilityScore",
-                      "status",
-                      "projectId"
+                      "sustainabilityPoints",
+                      "sustainabilityContext",
+                      "definitionOfDone"
                     ],
                     additionalProperties: false
                   }
@@ -150,24 +134,23 @@ Return the output as a JSON object with an "items" field containing an array of 
       }
       const responseContent = JSON.parse(completion.choices[0].message.content);
 
-      // Transform and save items
-      const items = await this.backlogItemModel.insertMany(
+      // Transform and save items using the Item model instead of BacklogItem
+      // Add the "AI Generated: " prefix to titles and ensure no sprint assignment
+      const items = await this.itemModel.insertMany(
         responseContent.items.map(item => ({
-          title: item.title,
+          title: `AI Generated: ${item.title}`, // Add prefix to title
           description: item.description,
           priority: item.priority,
-          sustainable: item.sustainable,
+          sustainable: true,
           storyPoints: item.storyPoints,
-          sustainabilityScore: item.sustainabilityScore,
-          status: item.status,
-          susafCategory: item.susafCategory || undefined,
-          assignedTo: item.assignedTo || undefined,
-          sprintId: item.sprintId || undefined,
-          projectId: projectId,
           sustainabilityPoints: item.sustainabilityPoints || undefined,
-          relatedSusafEffects: item.relatedSusafEffects || [],
+          status: "To Do",
+          projectId: projectId,
+          // No sprintId assigned
+          relatedSusafEffects: [],
           definitionOfDone: item.definitionOfDone || "",
-          tags: item.tags || []
+          tags: [],
+          sustainabilityContext: item.sustainabilityContext || "",
         }))
       );
 
