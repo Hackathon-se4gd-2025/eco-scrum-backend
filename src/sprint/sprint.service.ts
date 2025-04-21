@@ -60,4 +60,24 @@ export class SprintService {
     return { message: 'Sprint completed successfully', sprint };
   }
 
+  async updateSprintData(
+    sprintId: string,
+    updateData: { items: string[]; sustainabilityScore: number },
+  ): Promise<Sprint> {
+    // Find the sprint by ID
+    const sprint = await this.sprintModel.findById(sprintId);
+    if (!sprint) {
+      throw new NotFoundException(`Sprint with ID ${sprintId} not found`);
+    }
+
+    // Update the sprint with the new data
+    sprint.items = updateData.items;
+    sprint.sustainabilityScore = updateData.sustainabilityScore;
+
+    // Save the updated sprint
+    await sprint.save();
+
+    return sprint;
+  }
+
 }

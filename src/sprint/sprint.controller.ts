@@ -61,4 +61,15 @@ export class SprintController {
   async completeSprint(@Param('id') id: string) {
     return this.sprintService.completeSprint(id);
   }
+
+  @Patch(':sprintId')
+  @ApiOperation({ summary: 'Update sprint data' })
+  @ApiResponse({ status: 200, description: 'Sprint data updated successfully', type: Sprint })
+  async updateSprintData(
+    @Param('sprintId') sprintId: string,
+    @Body() updateData: { items: string[]; sustainabilityScore: number },
+  ): Promise<Sprint> {
+    return this.sprintService.updateSprintData(sprintId, updateData);
+  }
+  
 }
